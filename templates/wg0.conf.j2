@@ -1,0 +1,10 @@
+[Interface]
+Address = 10.0.0.1/24
+ListenPort = 51820
+
+# place a dynamically generated key
+PrivateKey = {{ server_priv_key.stdout }}
+
+# standard NAT routing
+PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE

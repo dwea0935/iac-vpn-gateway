@@ -1,0 +1,15 @@
+# exclude ssh keys
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# exclude ansible retry files
+*.retry
+
+# exclude potential secret varibales
+secrets.yml
+
+#exclude .conf, .png files
+*.conf
+*.png

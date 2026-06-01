@@ -1,0 +1,66 @@
+- name: New VPN Peer Provision
+  hosts: all
+  become: yes
+  vars:
+   # default variables
+   peer_name: "default_client"
+   peer_ip: "10.0.0.2"
+   device_type: "desktop"
+   server_public_ip: "203.0.113.10"
+
+  tasks:
+   - name: Generate Peer Private Key in memory
+     ansible.builtin.shell: wg genkey
+     register: peer_priv_key
+     changed_when: false
+     check_mode: false #safe during dry run
+
+   - name: Generate Peer Public Key from Private Key
+     ansible.builtin.shell: echo "{{ peer_priv_key.stdout }}" | wg pubkey
+     register: peer_pub_key
+     changed_when: false
+     check_mode: false #same
+
+   - name: Fetch Server Public Key
+     ansible.builtin.shell: wg show wg0 public-key
+     register: server_pub_key
+     changed_when: false
+     check_mode: false #same
+
+   - name: Register Peer with live WireGuard Server
+     ansible.builtin.shell: |
+      wg set wg0 peer {{ peer_pub_key.stdout }} allowed-ips {{ peer_ip }}/32
+      wg-quick save wg0
+     register: wg_sync
+     changed_when: wg_sync.rc == 0
+     #don't care about this one, let it skip
+
+   - name: Find all orphaned ghost peers (Garbage Collection)
+     ansible.builtin.shell: |
+      wg show wg0 allowed-ips | awk '$2 == "(none)" {print $1}' || true
+     register: ghost_peers
+     changed_when: false
+     check_mode: false
+
+   - name: Kick ghost peers from live interface
+     ansible.builtin.shell: wg set wg0 peer {{ item }} remove
+     loop: "{{ ghost_peers.stdout_lines }}"
+     when: ghost_peers.stdout_lines | length > 0
+
+   - name: save pristine interface state ot disk
+     ansible.builtin.shell: wg-quick save wg0
+     when: ghost_peers.stdout_lines | length > 0
+
+   - name: Generate Local Client Config File
+     ansible.builtin.template:
+      src: templates/client.conf.j2
+      dest: "./{{ peer_name }}.conf"
+      mode: '0600'
+     delegate_to: localhost
+     become: no
+
+   - name: Generate QR Code for Mobile Devices
+     ansible.builtin.shell: qrencode -t png -o "./{{ peer_name }}_qrcode.png" < "./{{ peer_name }}.conf"
+     delegate_to: localhost
+     become: no
+     when: device_type == "mobile"

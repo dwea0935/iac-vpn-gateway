@@ -1,0 +1,32 @@
+- name: Security Playbook - Disable Password Auth, Removing Backdoors
+  hosts: all
+  become: yes #run as root
+
+  tasks:
+   - name: Disable Standard PasswordAuthentication
+     ansible.builtin.lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^#?PasswordAuthentication'
+      line: 'PasswordAuthentication no'
+      state: present
+     notify: Restart SSH
+
+   - name: Disable KbdInteractiveAuthentication (PAM trap door)
+     ansible.builtin.lineinfile:
+       path: /etc/ssh/sshd_config
+       regexp: '^#?KbdInteractiveAuthentication'
+       line: 'KbdInteractiveAuthentication no'
+       state: present
+     notify: Restart SSH
+
+   - name: Nuke cloud-init drop-in overrides (if exist)
+     ansible.builtin.file:
+       path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+       state: absent
+     notify: Restart SSH
+
+  handlers:
+   - name: Restart SSH
+     ansible.builtin.service:
+      name: ssh
+      state: restarted

@@ -1,0 +1,41 @@
+- name: Deploy Wireguard
+  hosts: all
+  become: yes
+
+  tasks:
+   - name: Install Wireguard
+     ansible.builtin.apt:
+      name: wireguard
+      state: present
+      update_cache: yes
+
+   - name: Generate WG private key (idempotent)
+     ansible.builtin.shell: wg genkey > /etc/wireguard/server_private.key
+     args:
+      creates: /etc/wireguard/server_private.key
+
+   - name: Generate WG public key (idempotent)
+     ansible.builtin.shell: wg pubkey < /etc/wireguard/server_private.key > /etc/wireguard/server_public.key
+     args:
+      creates: /etc/wireguard/server_public.key
+
+   - name: Read the private key into a variable
+     ansible.builtin.command: cat /etc/wireguard/server_private.key
+     register: server_priv_key
+     changed_when: false # reading a file doesn't change the server state
+
+   - name: Generate wg0.conf from template
+     ansible.builtin.template:
+      src: templates/wg.conf.j2
+      dest: /etc/wireguard/wg0.conf
+      owner: root
+      group: root
+      mode: '0600' # strict permissions: only root can read this
+     notify: Enable and Start WireGuard
+
+  handlers:
+   - name: Enable and Start WireGuard
+     ansible.builtin.systemd:
+      name: wg-quick@wg0
+      enabled: yes
+      state: restarted
