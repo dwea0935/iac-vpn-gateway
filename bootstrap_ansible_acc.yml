@@ -3,11 +3,17 @@
   become: yes
   vars:
    automation_user: "ansible"
-   automation_pub_key: "put a public ed25519 key here"
-   # This key is from this machine, for the future make sure to paste a generated key from the machine you want to run this on.
+   local_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_ed25519_ansible"
 
   tasks:
-   - name: Ensuring aumtoamtion user exists
+   - name: Generating ed25519 keypair locally for automation user
+     ansible.builtin.command:
+      cmd: ssh-keygen -t ed25519 -f "{{ local_key_path }}" -N "" -q
+      creates: "{{ local_key_path }}"
+     delegate_to: localhost
+     become: no
+
+   - name: Ensuring automation user exists
      ansible.builtin.user:
       name: "{{ automation_user }}"
       state: present
@@ -20,9 +26,9 @@
      ansible.builtin.authorized_key:
       user: "{{ automation_user }}"
       state: present
-      key: "{{ automation_pub_key }}"
+      key: "{{ lookup('file', local_key_path + '.pub') }}"
 
-   - name: Grant passwordless sudo to aumtomation user
+   - name: Grant passwordless sudo to automation user
      ansible.builtin.copy:
       dest: "/etc/sudoers.d/{{ automation_user }}"
       content: "{{ automation_user }} ALL=(ALL) NOPASSWD: ALL\n"
@@ -30,3 +36,10 @@
       #critical: syntax validation before saving
       #if the syntax is wrong, it aborts, preventing from breaking sudo on the server
       validate: /usr/sbin/visudo -cf %s
+
+   - name: Generate New Internal Inventory File
+     ansible.builtin.template:
+      src: templates/inventory_internal.ini.j2
+      dest: ./inventory_internal.ini
+     delegate_to: localhost
+     become: no

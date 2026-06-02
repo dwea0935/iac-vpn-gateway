@@ -47,14 +47,14 @@
      loop: "{{ ghost_peers.stdout_lines }}"
      when: ghost_peers.stdout_lines | length > 0
 
-   - name: save pristine interface state ot disk
+   - name: save pristine interface state to disk
      ansible.builtin.shell: wg-quick save wg0
      when: ghost_peers.stdout_lines | length > 0
 
    - name: Generate Local Client Config File
      ansible.builtin.template:
       src: templates/client.conf.j2
-      dest: "./{{ peer_name }}.conf"
+      dest: "/tmp/vpn_clients/{{ peer_name }}.conf"
       mode: '0600'
      delegate_to: localhost
      become: no

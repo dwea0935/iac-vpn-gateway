@@ -1,0 +1,18 @@
+# Listen on Localhost and the VPN Gateway
+interface={{ interface_lo }}
+interface={{ interface_wg }}
+listen-address={{ listen_addr_lo }}
+listen-address={{ listen_addr_wg }}
+bind-interfaces
+
+# Point to the NEW DNScrypt-proxy on port 5053
+no-resolv
+server=127.0.0.1#5053
+
+# High-Performance Cache
+cache-size=10000
+domain-needed
+bogus-priv
+
+# Optimization: Maximize the number of simultaneous DNS queries
+dns-forward-max=150

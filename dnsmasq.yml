@@ -1,0 +1,33 @@
+---
+- name: Installing and Setting up dnsmasq
+  hosts: all
+  become: yes
+  vars:
+   interface_lo: "lo"
+   interface_wg: "wg0"
+   listen_addr_lo: "127.0.0.1"
+   listen_addr_wg: "10.0.0.1"
+
+  tasks:
+   - name: Install dnsmasq
+     ansible.builtin.apt:
+      name: dnsmasq
+      state: present
+      update_cache: yes
+      cache_valid_time: 3600
+
+   - name: Generate dnsmasq.conf from Template
+     ansible.builtin.template:
+      src: templates/dnsmasq.conf.j2
+      dest: /etc/dnsmasq.conf
+      owner: root
+      group: root
+      mode: '0644'
+     notify: Enable and Start dnsmasq
+
+  handlers:
+   - name: Enable and Start dnsmasq
+     ansible.builtin.systemd:
+      name: dnsmasq
+      enabled: yes
+      state: restarted

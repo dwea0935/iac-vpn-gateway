@@ -25,8 +25,28 @@
        state: absent
      notify: Restart SSH
 
+   - name: Remove public SSH access rule from UFW
+     ansible.general.ufw:
+      rule: allow
+      port: '22'
+      proto: tcp
+      src: 'Anywhere'
+      delete: yes
+
+   - name: Harden UFW to only let traffic from the itnernal network via WireGuard subnet
+     community.general.ufw:
+      rule: allow
+      port: '22'
+      proto: tcp
+      src: '10.0.0.0/24'
+
   handlers:
    - name: Restart SSH
      ansible.builtin.service:
       name: ssh
+      state: restarted
+
+   - name: Restart UFW
+     ansible.builtin.service:
+      name: ufw
       state: restarted

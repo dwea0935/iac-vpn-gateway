@@ -1,0 +1,6 @@
+---
+- ansible.builtin.import_playbook: wireguard.yml
+- ansible.builtin.import_playbook: firewall.yml
+- ansible.builtin.import_playbook: dnsmasq.yml
+- ansible.builtin.import_playbook: dnscrypt-proxy.yml
+- ansible.builtin.import_playbook: security.yml

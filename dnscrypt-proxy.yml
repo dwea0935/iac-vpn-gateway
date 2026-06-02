@@ -1,0 +1,32 @@
+---
+- name: Installing and Setting up dnscrypt-proxy
+  hosts: all
+  become: yes
+  vars:
+   server_name_one: "quad9-doh-ip4-port443"
+   server_name_two: "cloudflare"
+   listen_addr: "127.0.0.1:5053"
+
+  tasks:
+   - name: Install dnscrypt-proxy
+     ansible.builtin.apt:
+      name: dnscrypt-proxy
+      state: present
+      update_cache: yes
+      cache_valid_time: 3600
+
+   - name: Generate dnscrypt-proxy.toml from Template
+     ansible.builtin.template:
+      src: templates/dnscrypt-proxy.toml.j2
+      dest: /etc/dnscrypt-proxy/dnscrypt-proxy.toml
+      owner: root
+      group: root
+      mode: '0644'
+     notify: Enable and Start dnscrypt-proxy
+
+  handlers:
+   - name: Enable and Start dnscrypt-proxy
+     ansible.builtin.systemd:
+      name: dnscrypt-proxy
+      enabled: yes
+      state: restarted
