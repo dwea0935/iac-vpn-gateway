@@ -36,6 +36,8 @@ Ensure your local machine has generated the inventory_internal.ini from Phase 1.
 Execute the master site orchestration: ansible-playbook -i inventory_internal.ini execute.yml
 
 -Peer Provisioning-
+
 To add a new device to the VPN: ansible-playbook -i inventory_internal.ini add_peer.yml -e "peer_name=laptop peer_ip=10.0.0.2 device_type=desktop"
+
 
 Client configuration files and mobile QR codes will be safely generated locally in /tmp/vpn_clients/.
