@@ -15,6 +15,8 @@ This architecture is explicitly designed and tested for Debian-based distributio
 * **Supported OS:** Ubuntu 20.04 / 22.04 / 24.04 or Debian 11 / 12. *(Note: RHEL/CentOS/Fedora are not supported out-of-the-box due to hardcoded `apt` and `ufw` module dependencies).*
 * **Network Stack:** Fully supports IPv4 and IPv6 dual-stack routing. The WireGuard interface is configured with an IPv6 Unique Local Address (ULA) subnet (`fd42:42:42::/64`) to prevent client-side IPv6 traffic leaks.
 * **Init System:** Requires `systemd`. 
+* **Cloud Server Ports:** If used in a VPS environment, it needs to have UDP port 51820 and TCP port 22 open in the Cloud Firewall. Navigate to your VPS dashboard settings "Security Groups" or "VPC Network Rules", or similar to add these.
+* **Virtualization:** Requires KVM or dedicated hardware (OpenVZ is not supported).
 
 > [!NOTE]
 > **DNS Port 53 Handling:** Modern Ubuntu releases utilize a `systemd-resolved` stub listener that binds to port 53. The deployment playbooks automatically disable this stub listener to prevent collision with `dnsmasq`, and safely re-link `/etc/resolv.conf` to maintain host-level DNS resolution.
@@ -29,6 +31,7 @@ This architecture is explicitly designed and tested for Debian-based distributio
 * Local DNS Caching - `dnsmasq`
 * Encrypted DNS Routing (DoH) - `dnscrypt-proxy`
 * Firewall State - **UFW**
+* Defense in Depth layer: **fail2ban**
 
 ## Security Posture
 
@@ -42,6 +45,8 @@ This architecture is explicitly designed and tested for Debian-based distributio
   * `dnscrypt-proxy` public resolver lists are cryptographically verified via Minisign keys.
 * Garbage Collection
   * Automated detection and removal of orphaned/ghost peers within the **WireGuard** interface.
+* Defense in Depth:
+  * While the Zero-Trust perimeter technically renders `fail2ban` redundant (WireGuard silently drops unauthenticated packets, and public SSH is firewalled), it is deployed as a fail-safe. If the UFW state is ever accidentally compromised or misconfigured in the future, `fail2ban` is pre-configured to utilize `ufw` ban actions to immediately halt lateral brute-force attempts on the SSH daemon.
 
 ## Deployment Phases
 

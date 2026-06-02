@@ -40,6 +40,31 @@
       proto: tcp
       src: '10.0.0.0/24'
 
+   - name: Install fail2ban (Defense in Depth)
+     ansible.builtin.apt:
+      name: fail2ban
+      state: present
+      update_cache: yes
+
+   - name: Configure fail2ban jail.local for SSH
+     ansible.builtin.copy:
+      dest: /etc/fail2ban/jail.local
+      content: |
+       [DEFAULT]
+       bantime = 3600
+       findtime = 360
+       maxretry = 3
+       banaction = ufw
+
+       [sshd]
+       enabled = true
+       port = 22
+       filter = sshd
+       logpath = /var/log/auth.log
+       maxretry = 3
+      mode: '0644'
+     notify: Restart fail2ban
+
   handlers:
    - name: Restart SSH
      ansible.builtin.service:
@@ -49,4 +74,9 @@
    - name: Restart UFW
      ansible.builtin.service:
       name: ufw
+      state: restarted
+
+   - name: Restart fail2ban
+     ansible.builtin.service:
+      name: fail2ban
       state: restarted
