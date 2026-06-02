@@ -8,6 +8,20 @@ This repository contains an idempotent, Infrastructure-as-Code (IaC) deployment 
 
 The architecture is designed with a "Zero-Trust" mindset: it enforces a strict default-deny perimeter, dynamically routes DNS through an encrypted proxy (dnscrypt-proxy), and programmatically locks down all public administrative access once the secure tunnel is established.
 
+## Requirements
+
+This architecture is explicitly designed and tested for Debian-based distributions.
+
+* **Supported OS:** Ubuntu 20.04 / 22.04 / 24.04 or Debian 11 / 12. *(Note: RHEL/CentOS/Fedora are not supported out-of-the-box due to hardcoded `apt` and `ufw` module dependencies).*
+* **Network Stack:** Fully supports IPv4 and IPv6 dual-stack routing. The WireGuard interface is configured with an IPv6 Unique Local Address (ULA) subnet (`fd42:42:42::/64`) to prevent client-side IPv6 traffic leaks.
+* **Init System:** Requires `systemd`. 
+
+> [!NOTE]
+> **DNS Port 53 Handling:** Modern Ubuntu releases utilize a `systemd-resolved` stub listener that binds to port 53. The deployment playbooks automatically disable this stub listener to prevent collision with `dnsmasq`, and safely re-link `/etc/resolv.conf` to maintain host-level DNS resolution.
+
+> [!NOTE]
+> **Service Boot Sequencing:** A systemd drop-in override is automatically applied to `dnsmasq` to enforce a strict boot-order dependency, ensuring it never attempts to forward traffic before `dnscrypt-proxy` is fully initialized.
+
 ## Architecture Overview
 
 * Orchestration - **Ansible**
