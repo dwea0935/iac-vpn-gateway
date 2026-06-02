@@ -5,18 +5,28 @@ The architecture is designed with a "Zero-Trust" mindset: it enforces a strict d
 --Architecture Overview--
 
 Orchestration: Ansible
+
 Core Tunnel: WireGuard (wg0)
+
 Local DNS Caching: dnsmasq
+
 Encrypted DNS Routing (DoH): dnscrypt-proxy
+
 Firewall State: UFW (Uncomplicated Firewall)
+
 
 --Security Posture--
 
 Cryptographic Identity: Automated generation and deployment of Ed25519 SSH keys for a dedicated, passwordless automation user.
+
 Privilege Drop: Configuration files are permission-scoped (e.g., 0644 vs 0600) to respect Linux service privilege-dropping mechanics.
+
 The Vault Door: The deployment sequence permanently removes public SSH access on port 22, restricting all administrative traffic to the internal 10.0.0.0/24 WireGuard subnet.
+
 Supply Chain Verification: dnscrypt-proxy public resolver lists are cryptographically verified via Minisign keys.
+
 Garbage Collection: Automated detection and removal of orphaned/ghost peers within the WireGuard interface.
+
 
 --Deployment Phases--
 
@@ -25,15 +35,22 @@ Because this architecture permanently disables public administrative access, dep
 -Phase 1: The Bootstrap-
 
 This phase targets the raw metal via its public IP to establish secure automation credentials.
+
 Add the target server's public IP to inventory_initial.ini.
+
 Execute the bootstrap playbook: ansible-playbook -i inventory_initial.ini bootstrap_ansible_acc.yml
+
 Note: This generates a local SSH keypair, provisions the ansible user, pushes the public key, and dynamically creates the inventory_internal.ini file for Phase 2.
+
 
 -Phase 2: Core Infrastructure & Lockdown-
 
 This phase builds the encrypted tunnel, configures DNS routing, and permanently locks down the public perimeter.
+
 Ensure your local machine has generated the inventory_internal.ini from Phase 1.
+
 Execute the master site orchestration: ansible-playbook -i inventory_internal.ini execute.yml
+
 
 -Peer Provisioning-
 
