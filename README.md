@@ -38,7 +38,9 @@ This phase targets the raw metal via its public IP to establish secure automatio
 
 Add the target server's public IP to inventory_initial.ini.
 
-Execute the bootstrap playbook: ansible-playbook -i inventory_initial.ini bootstrap_ansible_acc.yml
+Execute the bootstrap playbook:
+
+ansible-playbook -i inventory_initial.ini bootstrap_ansible_acc.yml
 
 Note: This generates a local SSH keypair, provisions the ansible user, pushes the public key, and dynamically creates the inventory_internal.ini file for Phase 2.
 
@@ -54,7 +56,9 @@ Execute the master site orchestration: ansible-playbook -i inventory_internal.in
 
 -Peer Provisioning-
 
-To add a new device to the VPN: ansible-playbook -i inventory_internal.ini add_peer.yml -e "peer_name=laptop peer_ip=10.0.0.2 device_type=desktop"
+To add a new device to the VPN:
+
+ansible-playbook -i inventory_internal.ini add_peer.yml -e "peer_name=laptop peer_ip=10.0.0.2 device_type=desktop"
 
 
 Client configuration files and mobile QR codes will be safely generated locally in /tmp/vpn_clients/.
