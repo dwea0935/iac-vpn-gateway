@@ -9,6 +9,17 @@
       state: present
       update_cache: yes
 
+   - name: Enable IPv4 and IPv6 traffic forwarding in the kernel
+     ansible.posix.sysctl:
+      name: "{{ item.name  }}"
+      value: "{{ item.value }}"
+      sysctl_set: yes
+      state: present
+      reload: yes
+     loop:
+      - { name: 'net.ipv4.ip_forward', value: '1' }
+      - { name: 'net.ipv6.conf.all.forwarding', value: '1' }
+
    - name: Generate WG private key (idempotent)
      ansible.builtin.shell: wg genkey > /etc/wireguard/server_private.key
      args:
