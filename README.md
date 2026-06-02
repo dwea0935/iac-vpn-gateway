@@ -57,7 +57,7 @@ Execute the master site orchestration:
 ```ansible-playbook -i inventory_internal.ini execute.yml```
 
 
-### Peer Provisioning
+## Peer Provisioning
 
 To add a new device to the VPN:
 
