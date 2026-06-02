@@ -63,6 +63,7 @@ To add a new device to the VPN:
 
 ```ansible-playbook -i inventory_internal.ini add_peer.yml -e "peer_name=laptop peer_ip=10.0.0.2 device_type=desktop"```
 
+
 _Note: `peer_name, peer_ip, device_type` are the adjustable variables. `device_type` can be either `desktop` or `mobile`._
 
 

@@ -9,6 +9,37 @@
    listen_addr_wg: "10.0.0.1"
 
   tasks:
+   - name: Disable systemd-resolved stub listener to free port 53
+     ansible.builtin.lineinfile:
+      path: /etc/systemd/resolved.conf
+      regexp: '^#?DNSStubListener='
+      line: 'DNSStubListener=no'
+      state: present
+     notify: Restart systemd-resolved
+
+   - name: Ensure /etc/resolv.conf points to the real resolver
+     ansible.builtin.file:
+      src: /run/systemd/resolve/resolv.conf
+      dest: /etc/resolv.conf
+      state: link
+      force: yes
+
+   - name: Create systemd drop-in directory for dnsmasq
+     ansible.builtin.file:
+      path: /etc/systemd/system/dnsmasq.service.d
+      state: directory
+      mode: '0755'
+
+   - name: Ensure dnsmasq waits for dnscrypt-proxy on boot
+     ansible.builtin.copy:
+      dest: /etc/systemd/system/dnsmasq.service.d/override.conf
+      content: |
+       [Unit]
+       Requires=dnscrypt-proxy.service
+       After=dnscrypt-proxy.service
+      mode: '0644'
+     notify: Reload systemd
+
    - name: Install dnsmasq
      ansible.builtin.apt:
       name: dnsmasq
@@ -31,3 +62,12 @@
       name: dnsmasq
       enabled: yes
       state: restarted
+
+   - name: Restart systemd-resolved
+     ansible.builtin.systemd:
+      name: systemd-resolved
+      state: restarted
+
+   - name: Reload systemd
+     ansible.builtin.systemd:
+      daemon_reload: yes
