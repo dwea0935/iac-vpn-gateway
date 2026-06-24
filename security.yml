@@ -26,7 +26,7 @@
      notify: Restart SSH
 
    - name: Remove public SSH access rule from UFW
-     ansible.general.ufw:
+     community.general.ufw:
       rule: allow
       port: '22'
       proto: tcp

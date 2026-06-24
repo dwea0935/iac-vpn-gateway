@@ -55,7 +55,7 @@
 
    - name: Record peer public key to the ledger
      ansible.builtin.copy:
-      content: "{{ peer_pub_key.stdout }}
+      content: "{{ peer_pub_key.stdout }}"
       dest: "/etc/wireguard/client_ledger/{{ peer_name }}.pub"
       owner: root
       group: root
