@@ -1,0 +1,46 @@
+---
+- name: Complete Peer Lifecycle - Secure Removal
+  hosts: all
+  become: yes
+  vars:
+   peer_name: ""
+
+  tasks:
+   - name: Validate input variable
+     ansible.builtin.fail:
+      msg: "Error: 'peer_name' must be defined. Example -e 'peer_name=phone' "
+     when: peer_name | length == 0
+
+   - name: Locate peer in the identity ledger
+     ansible.builtin.stat:
+      path: "/etc/wireguard/client_ledger/{{ per_name }}.pub"
+     register: ledger_entry
+
+   - name: Abort if peer is untracked
+     ansible.builtin.fail:
+      msg: "Peer '{{ peer_name }}' does not exist in the ledger. Run an audit first."
+     when: not ledger_entry.stat.exists
+
+   - name: Read peer public key from ledger
+     ansible.builtin.command: cat "/etc/wireguard/client_ledger/{{ peer_name }}.pub"
+     register: target_key
+     changed_when: false
+
+   - name: Evict peer from active kernel runtime interface
+     ansible.builtin.shell: wg set wg0 peer "{{ target_key.stdout | trim }}" remove
+
+   - name: Commit clean kernel state permanently to wg0.conf
+     ansible.builtin.shell: wg-quick save wg0
+
+   - name: Delete local backup configuration copies for hygeine
+     ansible.builtin.file:
+      path: "/tmp/vpn_clients/{{ peer_name }}.conf"
+      state: absent
+     delegate_to: localhost
+     become: no
+     ignore_errors: true
+
+   - name: Purge peer identity from the gateway ledger
+     ansible.builtin.file:
+      path: "/etc/wireguard/client_ledger/{{ peer_name }}.pub"
+      state: absent

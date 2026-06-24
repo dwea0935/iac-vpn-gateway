@@ -1,0 +1,23 @@
+---
+- name: Infrastructure Audit - Extract Unmapped WireGuard Peers
+  hosts: all
+  become: yes
+
+  tasks:
+   - name: Get raw allowed-ips mapping from the kernel
+     ansible.builtin.shell: wg show wg0 allowed-ips
+     register: wg_allowed_ips
+     changed_when: false
+
+   - name: Save the raw wireguard state to control node for review
+     ansible.builtin.copy:
+      content: |
+       # WireGuard Active Peer Audit
+       Generated on: {{ ansible_date_time.iso8601 }}
+       
+       Public Key                  | Assigned IP
+       ==========================================
+       {{ wg_allowed_ips.stdout }}
+      dest: "./audit_report.txt"
+     delegate_to: localhost
+     become: no

@@ -6,9 +6,19 @@
    peer_name: "default_client"
    peer_ip: "10.0.0.2"
    device_type: "desktop"
-   server_public_ip: "203.0.113.10"
 
   tasks:
+   - name: Determine public IP address via external lookup
+     ansible.builtin.uri:
+      uri: https://api.ipify.org
+      return_content: yes
+     register: public_ip_lookup
+     changed_when: false
+
+   - name: set public IP fact
+     ansible.builtin.set_fact:
+      server_public_ip: "{{ public_ip_lookup.content | trim }}"
+
    - name: Generate Peer Private Key in memory
      ansible.builtin.shell: wg genkey
      register: peer_priv_key
@@ -34,6 +44,22 @@
      register: wg_sync
      changed_when: wg_sync.rc == 0
      #don't care about this one, let it skip
+
+   - name: Ensure client ledger directory exists on the gateway
+     ansible.builtin.file:
+      path: /etc/wireguard/client_ledger
+      state: directory
+      owner: root
+      group: root
+      mode: '0700'
+
+   - name: Record peer public key to the ledger
+     ansible.builtin.copy:
+      content: "{{ peer_pub_key.stdout }}
+      dest: "/etc/wireguard/client_ledger/{{ peer_name }}.pub"
+      owner: root
+      group: root
+      mode: '0600'
 
    - name: Find all orphaned ghost peers (Garbage Collection)
      ansible.builtin.shell: |
