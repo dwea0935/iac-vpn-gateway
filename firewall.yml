@@ -3,36 +3,72 @@
   become: yes
 
   tasks:
-   - name: Ensure UFW is installed
-     ansible.builtin.apt:
-      name: ufw
-      state: present
+    - name: Ensure UFW is installed
+      ansible.builtin.apt:
+        name: ufw
+        state: present
 
-   - name: Set UFW default deny incoming, allow outgoing
-     community.general.ufw:
-      default: deny
-      direction: incoming
+    - name: Enable IPv4 forwarding in UFW defaults
+      ansible.builtin.lineinfile:
+        path: /etc/default/ufw
+        regexp: '^DEFAULT_FORWARD_POLICY='
+        line: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
+      notify: Reload UFW
 
-   - name: Allow SSH traffic (port 22)
-     community.general.ufw:
-      rule: allow
-      port: '22'
-      proto: tcp
-      src: 'Anywhere'
+    - name: Add NAT masquerade to UFW before rules
+      ansible.builtin.blockinfile:
+        path: /etc/ufw/before.rules
+        insertbefore: "\\*filter"
+        marker: "# {mark} ANSIBLE MANAGED NAT"
+        block: |
+          *nat
+          :POSTROUTING ACCEPT [0:00]
+          -A POSTROUTING -s {{ vpn_subnet_prefix }}.0/24 -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+          COMMIT
+      notify: Reload UFW
 
-   - name: Allow Wireguard traffic (Port 51820 or other)
-     community.general.ufw:
-      rule: allow
-      port: '51820'
-      proto: udp
+    - name: Set UFW default deny incoming, allow outgoing
+      community.general.ufw:
+        default: deny
+        direction: incoming
 
-   - name: Allow DNS traffic from WireGuard subnet
-     community.general.ufw:
-      rule: allow
-      port: '53'
-      proto: any
-      src: '10.0.0.0/24'
+    - name: Allow SSH traffic (port 22)
+      community.general.ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
 
-   - name: Enable UFW and apply rules
-     community.general.ufw:
-      state: enabled
+    - name: Allow Wireguard traffic (Port 51820/udp)
+      community.general.ufw:
+        rule: allow
+        port: '51820'
+        proto: udp
+
+    - name: Allow DNS traffic explicitly on the WireGuard interface
+      community.general.ufw:
+        rule: allow
+        port: '53'
+        proto: any
+        interface: "{{ interface_wg }}"
+        direction: in
+
+    - name: Allow forwarding from WireGuard
+      community.general.ufw:
+        route: yes
+        rule: allow
+        src: "{{ vpn_subnet_prefix }}.0/24"
+
+    - name: Allow forwarding to WireGuard
+      community.general.ufw:
+        route: yes
+        rule: allow
+        dest: "{{ vpn_subnet_prefix }}.0/24"
+
+    - name: Enable UFW and apply rules
+      community.general.ufw:
+        state: enabled
+
+  handlers:
+    - name: Reload UFW
+      community.general.ufw:
+        state: reloaded

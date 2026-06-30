@@ -2,13 +2,12 @@
 - name: Installing and Setting up dnsmasq
   hosts: all
   become: yes
-  vars:
-   interface_lo: "lo"
-   interface_wg: "wg0"
-   listen_addr_lo: "127.0.0.1"
-   listen_addr_wg: "10.0.0.1"
 
   tasks:
+   - name: Determine WireGuard IP assigned to wg0
+     ansible.builtin.set_fact:
+      listen_addr_wg: "{{ ansible_wg0.ipv4.address }}"
+
    - name: Disable systemd-resolved stub listener to free port 53
      ansible.builtin.lineinfile:
       path: /etc/systemd/resolved.conf

@@ -30,15 +30,22 @@
       rule: allow
       port: '22'
       proto: tcp
-      src: 'Anywhere'
+      src: 'any'
       delete: yes
+
+   - name: Ensure management access is open from local physical LAN
+     community.general.ufw:
+      rule: allow
+      port: '22'
+      proto: tcp
+      src: "{{ host_lan_subnet }}"
 
    - name: Harden UFW to only let traffic from the itnernal network via WireGuard subnet
      community.general.ufw:
       rule: allow
       port: '22'
       proto: tcp
-      src: '10.0.0.0/24'
+      src: '{{ vpn_subnet_prefix }}.0/24'
 
    - name: Install fail2ban (Defense in Depth)
      ansible.builtin.apt:

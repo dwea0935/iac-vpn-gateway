@@ -1,0 +1,11 @@
+---
+# group_vars/all.yml
+# Desired virtual VPN tunnel subnet prefix
+vpn_subnet_prefix: "10.10.0"
+
+# Physical network
+host_lan_subnet: "10.9.0.0/24"
+
+interface_lo: "lo"
+interface_wg: "wg0"
+listen_addr_lo: "127.0.0.1"

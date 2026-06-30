@@ -4,7 +4,7 @@ listen_addresses = ['{{ listen_addr }}']
 
 # 2. Reliability (The 'Handshake' Fix)
 # This uses standard DNS to 'find' the DoH servers
-fallback_resolver = '9.9.9.9:53'
+bootstrap_resolvers = ['9.9.9.9:53', '1.1.1.1:53']
 ignore_system_dns = true
 netprobe_timeout = 0
 

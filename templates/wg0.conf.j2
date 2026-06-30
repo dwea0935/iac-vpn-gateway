@@ -1,10 +1,7 @@
 [Interface]
-Address = 10.0.0.1/24, fd42:42:42::1/64
+Address = {{ vpn_subnet_prefix }}.1/24, fd42:42:42::1/64
 ListenPort = 51820
 
 # place a dynamically generated key
 PrivateKey = {{ server_priv_key.stdout }}
-
-# IPv4 and IPv6 NAT routing
-PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE; ip6tables -A FORWARD -i %i -j ACCEPT; ip6tables -t nat -A POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
-PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE; ip6tables -D FORWARD -i %i -j ACCEPT; ip6tables -t nat -D POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+MTU = 1380

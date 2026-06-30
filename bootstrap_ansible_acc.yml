@@ -1,45 +1,58 @@
+---
 - name: Bootstrap Automation User
   hosts: all
-  become: yes
+  gather_facts: no
+  become: no  # Completely disable Ansible's broken become engine
+
   vars:
    automation_user: "ansible"
    local_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_ed25519_ansible"
 
   tasks:
-   - name: Generating ed25519 keypair locally for automation user
-     ansible.builtin.command:
-      cmd: ssh-keygen -t ed25519 -f "{{ local_key_path }}" -N "" -q
-      creates: "{{ local_key_path }}"
-     delegate_to: localhost
-     become: no
+   - name: Core Privilege Escalation Pipeline
+     block:
+       - name: Read sudo password into memory
+         set_fact:
+           sudo_pwd: "{{ ansible_become_pass | default(ansible_password) }}"
+         no_log: true
 
-   - name: Ensuring automation user exists
-     ansible.builtin.user:
-      name: "{{ automation_user }}"
-      state: present
-      shell: /bin/bash
-      groups: sudo
-      append: yes
-      create_home: yes
+       - name: Generating ed25519 keypair locally for automation user
+         ansible.builtin.command:
+          cmd: ssh-keygen -t ed25519 -f "{{ local_key_path }}" -N "" -q
+          creates: "{{ local_key_path }}"
+         delegate_to: localhost
 
-   - name: Set authorized key for automation user
-     ansible.builtin.authorized_key:
-      user: "{{ automation_user }}"
-      state: present
-      key: "{{ lookup('file', local_key_path + '.pub') }}"
+       - name: Ensuring automation user exists
+         ansible.builtin.shell: echo '{{ sudo_pwd }}' | sudo -S useradd -m -s /bin/bash -G sudo {{ automation_user }}
+         args:
+           creates: "/home/{{ automation_user }}"
+         no_log: true
 
-   - name: Grant passwordless sudo to automation user
-     ansible.builtin.copy:
-      dest: "/etc/sudoers.d/{{ automation_user }}"
-      content: "{{ automation_user }} ALL=(ALL) NOPASSWD: ALL\n"
-      mode: '0440'
-      #critical: syntax validation before saving
-      #if the syntax is wrong, it aborts, preventing from breaking sudo on the server
-      validate: /usr/sbin/visudo -cf %s
+       - name: Create .ssh directory for automation user
+         ansible.builtin.shell: |
+           echo '{{ sudo_pwd }}' | sudo -S mkdir -p /home/{{ automation_user }}/.ssh
+           echo '{{ sudo_pwd }}' | sudo -S chmod 700 /home/{{ automation_user }}/.ssh
+         no_log: true
 
-   - name: Generate New Internal Inventory File
-     ansible.builtin.template:
-      src: templates/inventory_internal.ini.j2
-      dest: ./inventory_internal.ini
-     delegate_to: localhost
-     become: no
+       - name: Set authorized key for automation user
+         ansible.builtin.shell: >
+           echo '{{ sudo_pwd }}' | sudo -S bash -c "echo '{{ lookup('file', local_key_path + '.pub') }}' > /home/{{ automation_user }}/.ssh/authorized_keys"
+         no_log: true
+
+       - name: Set correct permissions on authorized_keys
+         ansible.builtin.shell: |
+           echo '{{ sudo_pwd }}' | sudo -S chmod 600 /home/{{ automation_user }}/.ssh/authorized_keys
+           echo '{{ sudo_pwd }}' | sudo -S chown -R {{ automation_user }}:{{ automation_user }} /home/{{ automation_user }}/.ssh
+         no_log: true
+
+       - name: Grant passwordless sudo to automation user
+         ansible.builtin.shell: |
+           echo '{{ sudo_pwd }}' | sudo -S bash -c "echo '{{ automation_user }} ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/{{ automation_user }}"
+           echo '{{ sudo_pwd }}' | sudo -S chmod 0440 /etc/sudoers.d/{{ automation_user }}
+         no_log: true
+
+       - name: Generate New Internal Inventory File
+         ansible.builtin.template:
+          src: templates/inventory_internal.ini.j2
+          dest: ./inventory_internal.ini
+         delegate_to: localhost

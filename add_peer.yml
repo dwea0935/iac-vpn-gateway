@@ -4,13 +4,13 @@
   vars:
    # default variables
    peer_name: "default_client"
-   peer_ip: "10.0.0.2"
+   peer_ip: "{{ vpn_subnet_prefix }}.2"
    device_type: "desktop"
 
   tasks:
    - name: Determine public IP address via external lookup
      ansible.builtin.uri:
-      uri: https://api.ipify.org
+      url: https://api.ipify.org
       return_content: yes
      register: public_ip_lookup
      changed_when: false
@@ -76,6 +76,14 @@
    - name: save pristine interface state to disk
      ansible.builtin.shell: wg-quick save wg0
      when: ghost_peers.stdout_lines | length > 0
+
+   - name: Ensure local vpn_clients directory exists
+     ansible.builtin.file:
+      path: /tmp/vpn_clients
+      state: directory
+      mode: '0755'
+     delegate_to: localhost
+     become: no
 
    - name: Generate Local Client Config File
      ansible.builtin.template:
