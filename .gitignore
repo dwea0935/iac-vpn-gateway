@@ -13,3 +13,7 @@ secrets.yml
 #exclude .conf, .png files
 *.conf
 *.png
+
+#Block Windows Alternate Data Stream artifacts
+*Zone.Identifier
+*:Zone.Identifier
