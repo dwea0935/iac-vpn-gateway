@@ -12,9 +12,9 @@ Recent architectural upgrades have transitioned this from a static configuration
 
 ## Requirements
 
-This architecture is explicitly designed and tested for Debian-based distributions.
+This architecture is designed for Debian-based distributions. (Tested exclusively on Ubuntu 26.04 LTS).
 
-* **Supported OS:** Ubuntu 20.04 / 22.04 / 24.04 or Debian 11 / 12. *(Note: RHEL/CentOS/Fedora are not supported out-of-the-box due to hardcoded `apt` and `ufw` module dependencies).*
+* **Supported OS:** Theoretical support exists for Ubuntu 20.04+ and Debian 11+, but these have not been actively validated yet. *(Note: RHEL/CentOS/Fedora are not supported out-of-the-box due to hardcoded `apt` and `ufw` module dependencies).*
 * **Network Stack:** Fully supports IPv4 and IPv6 dual-stack routing. The WireGuard interface is configured with an IPv6 Unique Local Address (ULA) subnet (`fd42:42:42::/64`) to prevent client-side IPv6 traffic leaks.
 * **Init System:** Requires `systemd`. 
 * **Cloud Server Ports:** If used in a VPS environment, it needs to have UDP port 51820 and TCP port 22 open in the Cloud Firewall. Navigate to your VPS dashboard settings "Security Groups" or "VPC Network Rules", or similar to add these.
