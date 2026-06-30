@@ -8,6 +8,8 @@ This repository contains an idempotent, Infrastructure-as-Code (IaC) deployment 
 
 The architecture is designed with a "Zero-Trust" mindset: it enforces a strict default-deny perimeter, dynamically routes DNS through an encrypted proxy (dnscrypt-proxy), and programmatically locks down all public administrative access once the secure tunnel is established.
 
+Recent architectural upgrades have transitioned this from a static configuration to a highly modular deployment. By utilizing global variables and dynamic interface detection, the infrastructure seamlessly adapts to virtualized host environments (like Proxmox) without routing collisions between the physical LAN and the virtual tunnel.
+
 ## Requirements
 
 This architecture is explicitly designed and tested for Debian-based distributions.
@@ -26,11 +28,11 @@ This architecture is explicitly designed and tested for Debian-based distributio
 
 ## Architecture Overview
 
-* Orchestration - **Ansible**
+* Orchestration - **Ansible** (Driven by a single source of truth in `group_vars/all.yml`)
 * Core Tunnel - **WireGuard** (`wg0`)
 * Local DNS Caching - `dnsmasq`
 * Encrypted DNS Routing (DoH) - `dnscrypt-proxy`
-* Firewall State - **UFW**
+* Firewall State - **UFW** (With dynamically ingected `*nat` MASQUERADE rules)
 * Defense in Depth layer: **fail2ban**
 
 ## Security Posture
@@ -60,7 +62,7 @@ Add the target server's public IP to `inventory_initial.ini`.
 
 Execute the bootstrap playbook:
 
-``` ansible-playbook -i inventory_initial.ini bootstrap_ansible_acc.yml```
+``` ansible-playbook -i inventory_initial.ini bootstrap_ansible_acc.yml -k -K```
 
 _Note: This generates a local SSH keypair, provisions the ansible user, pushes the public key, and dynamically creates the inventory_internal.ini file for Phase 2._
 
@@ -83,7 +85,7 @@ To add a new device to the VPN:
 ```ansible-playbook -i inventory_internal.ini add_peer.yml -e "peer_name=laptop peer_ip=10.0.0.2 device_type=desktop"```
 
 
-_Note: `peer_name, peer_ip, device_type` are the adjustable variables. `device_type` can be either `desktop` or `mobile`._
+_Note: `peer_name, peer_ip, device_type` are the adjustable variables. `device_type` can be either `desktop` or `mobile`. The IP should align with the `vpn_subnet_prefix` defined in your global variables._
 
 
 Client configuration files and mobile QR codes will be safely generated locally in `/tmp/vpn_clients/`.
