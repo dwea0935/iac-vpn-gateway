@@ -88,13 +88,14 @@
    - name: Generate Local Client Config File
      ansible.builtin.template:
       src: templates/client.conf.j2
-      dest: "/tmp/vpn_clients/{{ peer_name }}.conf"
+      dest: "/tmp/vpn_clients/{{ inventory_hostname }}/{{ peer_name }}.conf"
       mode: '0600'
+      backup: yes
      delegate_to: localhost
      become: no
 
    - name: Generate QR Code for Mobile Devices
-     ansible.builtin.shell: qrencode -t png -o "./{{ peer_name }}_qrcode.png" < "./{{ peer_name }}.conf"
+     ansible.builtin.shell: qrencode -t png -o "/tmp/vpn_clients/{{ inventory_hostname }}/{{ peer_name }}_qrcode.png" < "/tmp/vpn_clients/{{ inventory_hostname }}/{{ peer_name }}.conf"
      delegate_to: localhost
      become: no
      when: device_type == "mobile"
