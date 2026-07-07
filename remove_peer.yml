@@ -13,7 +13,7 @@
 
    - name: Locate peer in the identity ledger
      ansible.builtin.stat:
-      path: "/etc/wireguard/client_ledger/{{ per_name }}.pub"
+      path: "/etc/wireguard/client_ledger/{{ peer_name }}.pub"
      register: ledger_entry
 
    - name: Abort if peer is untracked

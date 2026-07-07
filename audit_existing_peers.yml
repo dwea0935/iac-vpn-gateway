@@ -19,5 +19,6 @@
        ==========================================
        {{ wg_allowed_ips.stdout }}
       dest: "./audit_report.txt"
+      backup: yes
      delegate_to: localhost
      become: no
