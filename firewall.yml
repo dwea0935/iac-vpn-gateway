@@ -76,6 +76,18 @@
         rule: allow
         dest: "{{ vpn_subnet_prefix }}.0/24"
 
+    - name: Allow IPv6 forwarding from WireGuard
+      community.general.ufw:
+        route: yes
+        rule: allow
+        src: "fd42:42:42::/64"
+
+    - name: Allow IPv6 forwarding to WireGuard
+      community.general.ufw:
+        route: yes
+        rule: allow
+        dest: "fd42:42:42::/64"
+
     - name: Enable UFW and apply rules
       community.general.ufw:
         state: enabled
