@@ -34,7 +34,7 @@
 
    - name: Delete local backup configuration copies for hygeine
      ansible.builtin.file:
-      path: "/tmp/vpn_clients/{{ peer_name }}.conf"
+      path: "/tmp/vpn_clients/{{ inventory_hostname }}/{{ peer_name }}.conf"
       state: absent
      delegate_to: localhost
      become: no
