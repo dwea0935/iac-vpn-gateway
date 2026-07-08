@@ -39,7 +39,7 @@
 
    - name: Register Peer with live WireGuard Server
      ansible.builtin.shell: |
-      wg set wg0 peer {{ peer_pub_key.stdout }} allowed-ips {{ peer_ip }}/32
+      wg set wg0 peer {{ peer_pub_key.stdout }} allowed-ips {{ peer_ip }}/32,fd42:42:42::{{ peer_ip | split('.') | last }}/128
       wg-quick save wg0
      register: wg_sync
      changed_when: wg_sync.rc == 0
