@@ -27,6 +27,18 @@
           COMMIT
       notify: Reload UFW
 
+    - name: Add NAT masquerade to UFW before6 rules
+      ansible.builtin.blockinfile:
+       path: /etc/ufw/before6.rules
+       insertbefore: "\\*filter"
+       marker: "# {mark} ANSIBLE MANAGED NAT IPv6"
+       block: |
+         *nat
+         :POSTROUTING ACCEPT [0:00]
+         -A POSTROUTING -s fd42:42:42::/64 -o {{ ansible_default_ipv6.interface }} -j MASQUERADE
+         COMMIT
+      notify: Reload UFW
+
     - name: Set UFW default deny incoming, allow outgoing
       community.general.ufw:
         default: deny

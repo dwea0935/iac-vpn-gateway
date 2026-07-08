@@ -9,3 +9,9 @@ host_lan_subnet: "10.9.0.0/24"
 interface_lo: "lo"
 interface_wg: "wg0"
 listen_addr_lo: "127.0.0.1"
+listen_addr_wg6: "fd42:42:42::1"
+
+#dnscrypt-proxy
+server_name_one: "quad9-doh-ip4-port443"
+server_name_two: "cloudflare"
+listen_addr: "127.0.0.1:5053"

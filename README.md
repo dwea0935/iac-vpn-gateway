@@ -29,9 +29,9 @@ This architecture is designed for Debian-based distributions. (Tested exclusivel
 ## Architecture Overview
 
 * Orchestration - **Ansible** (Driven by a single source of truth in `group_vars/all.yml`)
-* Core Tunnel - **WireGuard** (`wg0`)
-* Local DNS Caching - `dnsmasq`
-* Encrypted DNS Routing (DoH) - `dnscrypt-proxy`
+* Core Tunnel - **WireGuard** (`wg0` with a maintained server-side client ledger)
+* Local DNS Caching - **dnsmasq**
+* Encrypted DNS Routing (DoH) - **dnscrypt-proxy**
 * Firewall State - **UFW** (With dynamically ingected `*nat` MASQUERADE rules)
 * Defense in Depth layer: **fail2ban**
 
@@ -89,3 +89,11 @@ _Note: `peer_name, peer_ip, device_type` are the adjustable variables. `device_t
 
 
 Client configuration files and mobile QR codes will be safely generated locally in `/tmp/vpn_clients/`.
+
+
+To remove an existing device from VPN:
+
+```ansible-playbook -i inventory_internal.ini remove_peer.yml -e "peer_name=laptop"```
+
+_Note: `peer_name` is the same variable you used before to add that peer. It can also be found on the server in the `/etc/wireguard/client_ledger` folder._
+

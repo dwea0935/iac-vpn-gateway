@@ -1,11 +1,11 @@
 [Interface]
-Address = {{ peer_ip }}/32, fd42:42:42::{{ peer_ip | split('.') | last }}/128
+Address = {{ peer_ip }}/32, fd42:42:42::{{ peer_ip | split('.') | last }}/64
 PrivateKey = {{ peer_priv_key.stdout }}
 DNS = {{ vpn_subnet_prefix }}.1, fd42:42:42::1
-MTU = 1380
+MTU = 1360
 
 [Peer]
 PublicKey = {{ server_pub_key.stdout }}
 Endpoint = {{ server_public_ip }}:51820
-AllowedIPs = 0.0.0.0/0
+AllowedIPs = 0.0.0.0/0, ::/0
 PersistentKeepalive = 25

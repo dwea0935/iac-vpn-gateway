@@ -3,11 +3,15 @@ interface={{ interface_lo }}
 interface={{ interface_wg }}
 listen-address={{ listen_addr_lo }}
 listen-address={{ listen_addr_wg }}
+listen-address={{ listen_addr_wg6 }}
 bind-interfaces
 
 # Point to the NEW DNScrypt-proxy on port 5053
 no-resolv
 server=127.0.0.1#5053
+
+# Filter out IPv6 AAAA records to force clients over the IPv4 VPN tunnel
+filter-AAAA
 
 # High-Performance Cache
 cache-size=10000

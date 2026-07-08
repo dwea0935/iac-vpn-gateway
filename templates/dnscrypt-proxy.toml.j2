@@ -2,9 +2,26 @@
 server_names = ['{{ server_name_one }}', '{{ server_name_two }}']
 listen_addresses = ['{{ listen_addr }}']
 
-# 2. Reliability (The 'Handshake' Fix)
-# This uses standard DNS to 'find' the DoH servers
+#load-balancing strategy
+lb_strategy = 'first'
+
+# 2. Reliability
+# check version of the proxy dynamically
+{% set proxy_ver = dnscrypt_version.stdout.strip() %}
+
+{% if proxy_ver is version('2.1.0', '>=')%}
+# modern syntax
 bootstrap_resolvers = ['9.9.9.9:53', '1.1.1.1:53']
+
+{% elif proxy_ver is version('2.0.38', '>=') %}
+# middle-child syntax v2.0.38-2.0.45
+fallback_resolvers = ['9.9.9.9:53', '1.1.1.1:53']
+
+{% else %}
+# legacy syntax pre v2.0.38
+fallback_resolver = '9.9.9.9:53'
+{% ednif %}
+
 ignore_system_dns = true
 netprobe_timeout = 0
 
