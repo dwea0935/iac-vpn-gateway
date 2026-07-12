@@ -2,6 +2,12 @@
 Address = {{ vpn_subnet_prefix }}.1/24, fd42:42:42::1/64
 ListenPort = 51820
 
+# Traffic Control
+PostUp = tc qdisc replace dev %i root cake bandwidth 860mbit
+
 # place a dynamically generated key
 PrivateKey = {{ server_priv_key.stdout }}
 MTU = 1360
+
+#Dynamically re-injected audit peers
+{{ captured_peers }}

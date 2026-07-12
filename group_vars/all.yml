@@ -3,6 +3,10 @@
 # Desired virtual VPN tunnel subnet prefix
 vpn_subnet_prefix: "10.10.0"
 
+#DNS Resolution
+client_dns_ipv4: "10.9.0.10"
+client_dns_ipv6: "fd00:10:9::10"
+
 # Physical network
 host_lan_subnet: "10.9.0.0/24"
 
@@ -12,6 +16,7 @@ listen_addr_lo: "127.0.0.1"
 listen_addr_wg6: "fd42:42:42::1"
 
 #dnscrypt-proxy
-server_name_one: "quad9-doh-ip4-port443"
-server_name_two: "cloudflare"
+server_name_one: "quad9-dnscrypt-ip4-filter-ecs-pri"  # Maps to 9.9.9.11
+server_name_two: "quad9-dnscrypt-ip6-filter-ecs-pri"  # Maps to 2620:fe::11
 listen_addr: "127.0.0.1:5053"
+force_tcp: "false" #do not force TCP on the proxy due to the fact that it will fail, it's fine if it's DoH tho

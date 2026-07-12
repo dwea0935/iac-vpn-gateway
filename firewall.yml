@@ -10,10 +10,32 @@
 
     - name: Enable IPv4 forwarding in UFW defaults
       ansible.builtin.lineinfile:
-        path: /etc/default/ufw
-        regexp: '^DEFAULT_FORWARD_POLICY='
-        line: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
+       path: /etc/default/ufw
+       regexp: '^DEFAULT_FORWARD_POLICY='
+       line: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
       notify: Reload UFW
+
+    - name: Enable IPv4 forwarding in sysctl.conf
+      ansible.builtin.lineinfile:
+       path: /etc/ufw/sysctl.conf
+       regexp: '^#?net/ipv4/ip_forward=.*'
+       line: 'net/ipv4/ip_forward=1'
+       state: present
+
+    - name: Enable IPv6 default forwarding in sysctl.conf
+      ansible.builtin.lineinfile:
+       path: /etc/ufw/sysctl.conf
+       regexp: '^#?net/ipv6/conf/default/forwarding=.*'
+       line: 'net/ipv6/conf/default/forwarding=1'
+       state: present
+
+    - name: Enable IPv6 all forwarding in sysctl.conf
+      ansible.builtin.lineinfile:
+       path: /etc/ufw/sysctl.conf
+       regexp: '^#?net/ipv6/conf/all/forwarding=.*'
+       line: 'net/ipv6/conf/all/forwarding=1'
+       state: present
+
 
     - name: Add NAT masquerade to UFW before rules
       ansible.builtin.blockinfile:
@@ -35,7 +57,7 @@
        block: |
          *nat
          :POSTROUTING ACCEPT [0:00]
-         -A POSTROUTING -s fd42:42:42::/64 -o {{ ansible_default_ipv6.interface }} -j MASQUERADE
+         -A POSTROUTING -s fd42:42:42::/64 -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
          COMMIT
       notify: Reload UFW
 

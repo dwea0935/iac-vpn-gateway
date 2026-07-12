@@ -42,7 +42,7 @@ This architecture is designed for Debian-based distributions. (Tested exclusivel
 * Privilege Drop
   * Configuration files are permission-scoped (e.g., `0644` vs `0600`) to respect Linux service privilege-dropping mechanics.
 * The Vault Door
-  * The deployment sequence permanently removes public SSH access on port 22, restricting all administrative traffic to the internal `10.0.0.0/24` **WireGuard** subnet.
+  * The deployment sequence permanently removes public SSH access on port 22, restricting all administrative traffic to the internal  **WireGuard** subnet of your choice in `group_vars/all.yml' config file.
 * Supply Chain Verification
   * `dnscrypt-proxy` public resolver lists are cryptographically verified via Minisign keys.
 * Garbage Collection

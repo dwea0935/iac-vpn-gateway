@@ -20,6 +20,16 @@
       - { name: 'net.ipv4.ip_forward', value: '1' }
       - { name: 'net.ipv6.conf.all.forwarding', value: '1' }
 
+   - name: AppArmor - Allow wg-quick to execute Traffic Control
+     ansible.builtin.lineinfile:
+      path: /etc/apparmor.d/local/wg-quick
+      line: '/usr/sbin/tc ix,'
+      create: yes
+      owner: root
+      group: root
+      mode: '0644'
+     notify: Reload AppArmor
+
    - name: Generate WG private key (idempotent)
      ansible.builtin.shell: wg genkey > /etc/wireguard/server_private.key
      args:
@@ -35,6 +45,21 @@
      register: server_priv_key
      changed_when: false # reading a file doesn't change the server state
 
+   - name: Check if an existing wireguard configuration exists on disk
+     ansible.builtin.stat:
+      path: /etc/wireguard/wg0.conf
+     register: wg0_conf_file
+
+   - name: Extract all existing [Peer] blocks from the current file
+     ansible.builtin.shell: sed -n '/^\[Peer\]/,$p' /etc/wireguard/wg0.conf
+     register: live_peers
+     when: wg0_conf_file.stat.exists
+     changed_when: false
+
+   - name: Map captured peers to a stafe runtime variable
+     ansible.builtin.set_fact:
+      captured_peers: "{{ live_peers.stdout if wg0_conf_file.stat.exists else '' }}"
+
    - name: Generate wg0.conf from template
      ansible.builtin.template:
       src: templates/wg0.conf.j2
@@ -44,9 +69,22 @@
       mode: '0600' # strict permissions: only root can read this
      notify: Enable and Start WireGuard
 
-  handlers:
-   - name: Enable and Start WireGuard
+   - name: Force Ansible to apply pending security profile (AppArmor)
+     ansible.builtin.meta: flush_handlers
+
+   - name: Ensure WireGuard is always enabled and started
      ansible.builtin.systemd:
       name: wg-quick@wg0
       enabled: yes
-      state: restarted
+      state: started
+
+  handlers:
+   - name: Reload AppArmor
+     ansible.builtin.systemd:
+      name: apparmor
+      state: reloaded
+
+   - name: Enable and Start WireGuard
+     ansible.builtin.shell: wg syncconf wg0 <(wg-quick strip /etc/wireguard/wg0.conf)
+     args:
+      executable: /bin/bash

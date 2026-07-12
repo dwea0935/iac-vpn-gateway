@@ -26,7 +26,7 @@
          ansible.builtin.shell: echo '{{ sudo_pwd }}' | sudo -S useradd -m -s /bin/bash -G sudo {{ automation_user }}
          args:
            creates: "/home/{{ automation_user }}"
-         no_log: true
+         no_log: true 
 
        - name: Create .ssh directory for automation user
          ansible.builtin.shell: |

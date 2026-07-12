@@ -79,7 +79,7 @@
 
    - name: Ensure local vpn_clients directory exists
      ansible.builtin.file:
-      path: /tmp/vpn_clients
+      path: /tmp/vpn_clients/{{ inventory_hostname }}
       state: directory
       mode: '0755'
      delegate_to: localhost
